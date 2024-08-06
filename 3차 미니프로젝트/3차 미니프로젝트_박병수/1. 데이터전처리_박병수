@@ -1,0 +1,508 @@
+path = 'C:/Users/User/Desktop/'
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 변수의 특성 중요도 계산하기
+def plot_feature_importance(importance, names, result_only = False, topn = 'all'):
+    feature_importance = np.array(importance)
+    feature_name = np.array(names)
+
+    data={'feature_name':feature_name,'feature_importance':feature_importance}
+    fi_temp = pd.DataFrame(data)
+
+    #변수의 특성 중요도 순으로 정렬하기
+    fi_temp.sort_values(by=['feature_importance'], ascending=False,inplace=True)
+    fi_temp.reset_index(drop=True, inplace = True)
+
+    if topn == 'all' :
+        fi_df = fi_temp.copy()
+    else :
+        fi_df = fi_temp.iloc[:topn]
+
+    #변수의 특성 중요도 그래프로 그리기
+    if result_only == False :
+        plt.figure(figsize=(10,20))
+        sns.barplot(x='feature_importance', y='feature_name', data = fi_df)
+
+        plt.xlabel('importance')
+        plt.ylabel('feature name')
+        plt.grid()
+
+    return fi_df
+
+
+path1= 'data01_train.csv'
+data1 = pd.read_csv(path1)
+path2 = 'data01_test.csv'
+data2 = pd.read_csv(path2)
+path3 = 'features.csv'
+data3 = pd.read_csv(path3)
+data1.drop('subject', axis=1, inplace=True)
+data2.drop('subject', axis=1, inplace=True)
+
+target='Activity'
+#범주별 빈도수
+data1[target].value_counts()
+#data1.groupby(by=target, as_index=False).count()
+#범주별 비율
+data1[target].value_counts(normalize=True)
+#data1.groupby(by=target, as_index=False).count()/len(data1)
+
+#시각화
+plt.figure(figsize=(6,3))
+sns.countplot(data=data1, x=target)#x축을 target으로
+plt.xticks(rotation=45)
+plt.show()
+
+#target 설정
+target = 'Activity'
+# 데이터 분리
+x = data1.drop(target, axis=1)
+y = data1.loc[:, target]
+
+#학습용/검증용 데이터 분리
+# 모듈 불러오기
+from sklearn.model_selection import train_test_split
+# 7:3으로 분리
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.3, random_state=1)
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier #문자열 사용 못함, 따로 불러와야 함
+from lightgbm import LGBMClassifier #문자열 사용 못함, 따로 불러와야 함
+from sklearn.metrics import * #*은 다 불러온다는 뜻
+
+#4: Random Forest
+# 선언하기
+model = RandomForestClassifier()
+# 학습하기
+model.fit(x_train, y_train)
+# 예측하기
+y_pred = model.predict(x_val)
+# 평가하기
+print('accuracy :',accuracy_score(y_val, y_pred))
+print('='*60)
+print(confusion_matrix(y_val, y_pred))
+print('='*60)
+print(classification_report(y_val, y_pred))
+
+
+# 특성 중요도를 가져옵니다.
+feature_importances = model.feature_importances_
+
+# 특성 이름을 가져옵니다.
+feature_names = list(x)
+
+# 특성 중요도를 기준으로 내림차순으로 정렬합니다.
+sorted_indices = feature_importances.argsort()[::-1]
+sorted_feature_importances = feature_importances[sorted_indices]
+sorted_feature_names = [feature_names[i] for i in sorted_indices]
+
+# 그래프를 그립니다.
+plt.figure(figsize=(10,110))
+plt.barh(y=sorted_feature_names, width=sorted_feature_importances)
+plt.xlabel('Feature Importance')
+plt.ylabel('Feature')
+plt.title('Feature Importance of Model')
+plt.show()
+
+# 상위 5개 특성을 선택
+top_5_features = sorted_feature_names[:6]
+top_5_importances = sorted_feature_importances[:6]
+print(top_5_features)
+print(top_5_importances)
+
+# 하위 5개 특성을 선택
+bottom_5_features = sorted_feature_names[-5:]
+bottom_5_importances = sorted_feature_importances[-5:]
+print(bottom_5_features)
+print()
+
+#위에 주어진 함수 사용
+# 변수 중요도 계산
+importance = model.feature_importances_
+feature_names = list(x_train)
+
+# 함수 호출하여 시각화
+step = plot_feature_importance(importance, feature_names)
+
+#1위: 'tGravityAcc-min()-X'
+var = 'tGravityAcc-min()-X'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#2위: 'tGravityAcc-energy()-X'
+var = 'tGravityAcc-energy()-X'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show
+
+#3위: 'tGravityAcc-mean()-X'
+var = 'tGravityAcc-mean()-X'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#4위: 'tGravityAcc-max()-X'
+var = 'tGravityAcc-max()-X'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#5위: 'tGravityAcc-min()-Y'
+var = 'tGravityAcc-min()-Y'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#1위: 'tGravityAccMag-arCoeff()4'
+var = 'tGravityAccMag-arCoeff()4'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#2위: 'tGravityAccMag-arCoeff()3'
+var = 'tGravityAccMag-arCoeff()3'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#3위: 'tGravityAccMag-entropy()'
+var = 'tGravityAccMag-entropy()'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#4위: 'tGravityAccMag-min()'
+var = 'tGravityAccMag-min()'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+#5위: 'tBodyAcc-mean()-X'
+var = 'tBodyAcc-mean()-X'
+plt.figure(figsize=(10,6))
+sns.kdeplot(x=var, data=data1, hue=target, common_norm=False)
+plt.show()
+
+# 특성 중요도
+feature_importances = model.feature_importances_
+# 특성 이름
+feature_names = list(x)
+# 데이터프레임으로 변환
+feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importances})
+
+print(feature_importance_df)# 데이터 프레임 출력
+type(feature_importance_df)# 데이터 프레임 타입 확인
+
+merged_df = pd.merge(data3, feature_importance_df, left_on='feature_name', right_on='Feature', how='inner')
+merged_df[20:50]
+merged_df.isna().sum() #axis->125
+
+merged_df.drop(columns=['Feature'], inplace=True)
+merged_df
+
+merged_df.groupby(by='sensor', as_index=False)['Importance'].sum().sort_values(by='Importance', ascending=False)
+
+merged_df.groupby(by='sensor', as_index=True)['Importance'].sum().sort_values().plot.barh(figsize=(20,10))
+
+merged_df.groupby(by='agg', as_index=False)['Importance'].sum().sort_values(by='Importance', ascending=False)
+merged_df.groupby(by='sensor', as_index=True)['Importance'].sum().sort_values().plot.barh(figsize=(20,10))
+
+merged_df.groupby(by=['sensor','agg'], as_index=False)['Importance'].sum().sort_values(by='Importance', ascending=False)
+merged_df.groupby(by=['sensor','agg'], as_index=True)['Importance'].sum().sort_values().plot.barh(figsize=(20,110))
+
+# Sensor 별, agg로 나눠서 분석하기
+merged_df.groupby(['sensor','agg'])['Importance'].sum().unstack().plot(kind='barh', stacked=True, figsize = (20,30))
+plt.grid()
+plt.show()
+
+
+merged_df['Activity'] = y
+
+
+#1. 라이브러리 불러오기
+import warnings
+warnings.filterwarnings(action='ignore')
+%config InlineBackend.figure_format='retina'
+
+#2. 데이터 읽어오기
+merged_df
+
+#3. 데이터 이해
+merged_df.head()
+merged_df.info()
+merged_df.describe()
+
+#4.열 추가
+# 데이터 drop하기 전에 복사해서 사용하기
+step1 = merged_df.copy()
+step1['is_dynamic']=step1['Activity'].apply(lambda x: 1 if x in ['WALKING', 'WALKING_UPSTAIRS', 'WALKING_DOWNSTAIRS'] else 0)
+
+# Target 확인
+target = 'is_dynamic'
+# x,y 분리
+step1.drop('Activity', axis=1, inplace=True)
+x = step1.drop(target, axis=1)
+y = step1.loc[:, target]
+
+
+'''
+#4. 데이터 준비
+#가변수화
+dumm_cols = ['sensor', 'agg',	'axis',	'feature_name']
+x = pd.get_dummies(x, columns=dumm_cols, drop_first=True, dtype=int)
+
+#5. 학습용/평가용 데이터 분리
+# 라이브러리 불러오기
+from sklearn.model_selection import train_test_split
+# 학습용, 평가용 데이터 7:3으로 분리
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+
+#6. 정규화(KNN 알고리즘을 사용하기 위한)
+# 모듈 불러오기
+from sklearn.preprocessing import MinMaxScaler
+# 정규화
+scaler = MinMaxScaler()
+scaler.fit(x_train)
+x_train_s = scaler.fit_transform(x_train)
+x_test_s = scaler.transform(x_test)
+
+#7. K분할교차검증을 통한 모델 성능 예측
+#7-1. DecisionTree
+# 불러오기
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
+# 선언하기
+#model = DecisionTreeClassifier(max_depth=5,  random_state=1) #과적합 위험이 있어서 max_depth 자제
+model = DecisionTreeClassifier(random_state=1)
+# 검증하기
+cv_score = cross_val_score(model, x_train, y_train, cv=10)
+# 확인, 어떤 성능 지표일까?: 정확도에 대해서 보는 것이다
+print(cv_score)
+print('평균:', cv_score.mean())
+print('표준편차:', cv_score.std())
+#예측 결과 저장
+result = {}
+result['Desicion Tree'] = cv_score.mean()
+
+#7-2.KNN
+# 불러오기
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score
+# 선언하기
+model=KNeighborsClassifier()
+# 검증하기
+cv_score = cross_val_score(model, x_train_s, y_train, cv=10)
+# 확인
+print('확인:', cv_score)
+print('평균:', cv_score.mean())
+#예측 결과 저장
+result['KNN'] = cv_score.mean()
+
+#7-3.Logistic Regression
+# 불러오기
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+# 선언하기
+model = LogisticRegression()
+# 검증하기
+cv_score = cross_val_score(model, x_train, y_train, cv=10)
+# 확인
+print('확인:', cv_score)
+print('평균:', cv_score.mean())
+#예측 결과 저장
+result['Logistic Regression'] = cv_score.mean()
+
+#8. 3개의 모델 중 성능을 시각화하여 비교(결과: 이 데이터는 Logistic Regression이 가장 성능이 좋음)
+plt.figure(figsize=(5,3))
+plt.barh(y=list(result), width=result.values())
+plt.show()'''
+
+
+'''#9. 성능 평가
+#DecisionTree
+from sklearn.tree import DecisionTreeClassifier
+model=DecisionTreeClassifier(max_depth=None)
+model.fit(x_train, y_train)
+y_pred = model.predict(x_test)'''
+
+
+'''#10. 변수 중요도
+# 데이터프레임 만들기
+df = pd.DataFrame()
+df['feature'] = list(x)
+df['importance'] = model.feature_importances_
+df.sort_values(by='importance', ascending=True, inplace=True)
+# 시각화
+plt.figure(figsize=(10, 110))
+plt.barh(df['feature'], df['importance'])
+plt.show()'''
+
+
+'''# 모델의 변수 중요도를 가져옵니다.
+#Logistic Regression으로 한 경우
+importance = model.coef_[0]
+
+# 변수 이름을 가져옵니다.
+feature_names = x_train.columns
+
+# 중요도를 기준으로 내림차순으로 정렬합니다.
+sorted_indices = importance.argsort()[::-1]
+sorted_importance = importance[sorted_indices]
+sorted_feature_names = [feature_names[i] for i in sorted_indices]
+
+# 상위 5개 변수만 선택합니다.
+top_n = 5
+top_feature_names = sorted_feature_names[:top_n]
+top_importance = sorted_importance[:top_n]
+
+# 변수 중요도를 시각화합니다.
+plt.figure(figsize=(10, 6))
+plt.barh(top_feature_names, top_importance)
+plt.xlabel('Feature Importance')
+plt.ylabel('Feature')
+plt.title('Top 5 Feature Importance of Logistic Regression Model')
+plt.show()'''
+
+
+model_1 = RandomForestClassifier()
+model_1.fit(x_train, y_train)
+y_pred = model_1.predict(x_val)
+
+print('accuracy :',accuracy_score(y_val, y_pred))
+print('='*60)
+print(confusion_matrix(y_val, y_pred))
+print('='*60)
+print(classification_report(y_val, y_pred))
+
+
+#위에 주어진 함수 사용
+# 변수 중요도 계산
+importance = model_1.feature_importances_
+feature_names = list(x_train)
+
+# 함수 호출하여 시각화
+step1_im=plot_feature_importance(importance, feature_names)
+
+top_5_features = step1_im['feature_name'].head(5).tolist()
+print(top_5_features)
+
+'''#for문 안사용하고 구하기
+#1위: 'Importance'
+var = 'Importance'
+plt.figure(figsize=(5,3))
+sns.kdeplot(x=var, data=x_train, hue=y_train, fill=True, common_norm=False)
+plt.show()'''
+
+
+#5가지를 한번에 뽑는 방법
+top_5_features = step1_im['feature_name'].head(5).tolist()
+
+for var in top_5_features:
+    plt.figure(figsize=(8, 5))
+    sns.kdeplot(x=x_train[var], hue=y_train, fill=True, common_norm=False)
+    plt.xlabel(var)
+    plt.ylabel('Density')
+    plt.title(f'KDE Plot of {var}')
+    plt.show()
+
+
+result1 = pd.merge(data3, step1_im)
+result1.head()
+
+result1.groupby('sensor')[['feature_importance']].sum().sort_values('feature_importance').plot.barh(figsize=(20,10))
+plt.grid()
+plt.show()
+
+# 상위 20개만 조회
+temp = result1.groupby(['sensor','agg'])[['feature_importance']].sum().sort_values('feature_importance')
+temp.tail(20).plot.barh(figsize=(20,10))
+plt.grid()
+plt.show()
+
+# Sensor 별, agg로 나눠서 분석하기
+result1.groupby(['sensor','agg'])['feature_importance'].sum().unstack().plot(kind='barh', stacked=True, figsize = (20,10))
+plt.grid()
+plt.show()
+
+#4.열 추가
+# 데이터 drop하기 전에 복사해서 사용하기
+step2 = merged_df.copy()
+step2['is_standing']=step2['Activity'].apply(lambda x: 1 if x in ['STANDING'] else 0)
+step2
+
+# Target 확인
+target = 'is_standing'
+# x,y 분리
+step2.drop('Activity', axis=1, inplace=True)
+x = step2.drop(target, axis=1)
+y = step2.loc[:, target]
+
+#Random Forest로 모델생성
+model_2 = RandomForestClassifier()
+model_2.fit(x_train, y_train)
+y_pred = model_2.predict(x_val)
+
+#모델 평가하기
+print('accuracy :',accuracy_score(y_val, y_pred))
+print('='*60)
+print(confusion_matrix(y_val, y_pred))
+print('='*60)
+print(classification_report(y_val, y_pred))
+
+#위에 주어진 함수 사용
+# 변수 중요도 계산
+importance = model_2.feature_importances_
+feature_names = list(x_train)
+# 함수 호출하여 시각화
+step2_im=plot_feature_importance(importance, feature_names)
+
+#상위 5개 변수 뽑기
+top_5_features = step2_im['feature_name'].head(5).tolist()
+print(top_5_features)
+
+#5가지를 한번에 뽑는 방법
+top_5_features = step2_im['feature_name'].head(5).tolist()
+
+for var in top_5_features:
+    plt.figure(figsize=(8, 5))
+    sns.kdeplot(x=x_train[var], hue=y_train, fill=True, common_norm=False)
+    plt.xlabel(var)
+    plt.ylabel('Density')
+    plt.title(f'KDE Plot of {var}')
+    plt.show()
+
+# Sensor 별, agg로 나눠서 분석하기
+result7.groupby(['sensor','agg'])['feature_importance'].sum().unstack().plot(kind='barh', stacked=True, figsize = (20,10))
+plt.grid()
+plt.show()
+
+step.rename(columns={'feature_importance':'fi_all'}, inplace=True)
+step1.rename(columns={'feature_importance':'fi_dynamic'}, inplace=True)
+step2.rename(columns={'feature_importance':'fi_standing'}, inplace=True)
+step3.rename(columns={'feature_importance':'fi_sitting'}, inplace=True)
+step4.rename(columns={'feature_importance':'fi_laying'}, inplace=True)
+step5.rename(columns={'feature_importance':'fi_walking'}, inplace=True)
+step6.rename(columns={'feature_importance':'fi_walking_up'}, inplace=True)
+step7.rename(columns={'feature_importance':'fi_walking_down'}, inplace=True)
+
+
+result = pd.merge(data3, step)
+result = pd.merge(result, step1)
+result = pd.merge(result, step2)
+result = pd.merge(result, step3)
+result = pd.merge(result, step4)
+result = pd.merge(result, step5)
+result = pd.merge(result, step6)
+result = pd.merge(result, step7)
+
+result.head()
